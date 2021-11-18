@@ -19,9 +19,7 @@
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
-#include "dma.h"
-#include "fatfs.h"
-#include "sdio.h"
+#include "rtc.h"
 #include "usart.h"
 #include "gpio.h"
 
@@ -38,23 +36,19 @@
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
-
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
 /* USER CODE BEGIN PM */
-
 
 /* USER CODE END PM */
 
 /* Private variables ---------------------------------------------------------*/
 
 /* USER CODE BEGIN PV */
-uint32_t byteswritten;                /* File write counts */
-uint32_t bytesread;                   /* File read counts */
-uint8_t wtext[] = "This is STM32 working with FatFs"; /* File write buffer */
-uint8_t rtext[100];                     /* File read buffers */
-char filename[] = "STM32cube.txt";
+RTC_DateTypeDef GetData; // 获取日期结构�?
+RTC_TimeTypeDef GetTime; // 获取时间结构�?
+
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -97,46 +91,22 @@ int main(void)
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
   MX_USART1_UART_Init();
-  MX_SDIO_SD_Init();
-  MX_DMA_Init();
-  MX_FATFS_Init();
+  MX_RTC_Init();
   /* USER CODE BEGIN 2 */
-	HAL_GPIO_WritePin(LED1_GPIO_Port, LED1_Pin, GPIO_PIN_RESET);
-	printf("****** FatFs Example ******\r\n");
-	retSD = f_mount(&SDFatFS, "0:", 0);
-	if(retSD){
-			printf("****** mount error ******\r\n");
-	}
-	else
-			printf("****** mount success!!! ******\r\n");
-	retSD = f_open(&SDFile, filename, FA_CREATE_ALWAYS | FA_WRITE);
-	if(retSD){
-			printf("****** open file error ******\r\n");
-	}
-	else
-			printf("****** open file success!!! ******\r\n");	
-	retSD = f_write(&SDFile, wtext, sizeof(wtext), (void *)&byteswritten);
-	if(retSD){
-		printf("****** write file error ******\r\n");
-	}
-	else
-			printf("****** write file success!!! ******\r\n");
-	retSD = f_close(&SDFile);
-	if(retSD){
-		printf("****** close file error ******\r\n");
-	}
-	else
-			printf("****** close file success!!! ******\r\n");
-			
-	
-	
+
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-		
+    HAL_RTC_GetTime(&hrtc, &GetTime, RTC_FORMAT_BIN);
+    HAL_RTC_GetDate(&hrtc, &GetData, RTC_FORMAT_BIN);
+
+    printf("%02d/%02d/%02d\r\n", 2000 + GetData.Year, GetData.Month, GetData.Date);
+    printf("%02d:%02d:%02d\r\n", GetTime.Hours, GetTime.Minutes, GetTime.Seconds);
+    printf("\r\n");
+    HAL_Delay(1000);
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
@@ -160,8 +130,9 @@ void SystemClock_Config(void)
   /** Initializes the RCC Oscillators according to the specified parameters
   * in the RCC_OscInitTypeDef structure.
   */
-  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSE;
+  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSE|RCC_OSCILLATORTYPE_LSE;
   RCC_OscInitStruct.HSEState = RCC_HSE_ON;
+  RCC_OscInitStruct.LSEState = RCC_LSE_ON;
   RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
   RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSE;
   RCC_OscInitStruct.PLL.PLLM = 4;
@@ -190,7 +161,8 @@ void SystemClock_Config(void)
 /* USER CODE BEGIN 4 */
 int fputc(int ch, FILE *f)
 {
-  HAL_UART_Transmit(&huart1, (uint8_t *)&ch, 1, 0xffff);
+  uint8_t temp[1] = {ch};
+  HAL_UART_Transmit(&huart1, temp, 1, 2);
   return ch;
 }
 
