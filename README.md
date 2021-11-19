@@ -2,6 +2,12 @@ STM32F407ZGTx CubeMX 练习
 
 Firmware 版本：1.26.2
 
+https://gitee.com/weihengyi/STM32F407ZGT_Demo
+
+### 任务0
+
+测试 UART，将此文件作为后续任务的模板。
+
 ### 任务1
 
 测试 SDIO
@@ -71,5 +77,23 @@ Firmware 版本：1.26.2
 
   换回 LSI 时钟就行，默认不开启 LSE 即可。
 
+### 任务4
 
+测试 UART+DMA。
 
+参考：https://blog.csdn.net/as480133937/article/details/104827639
+
+问题：CubeMX 生成的初始化函数顺序有问题，DMA 应该在 UART 之前。
+
+原因剖析：https://shequ.stmicroelectronics.cn/forum.php?mod=viewthread&tid=622385
+
+是 CubeMX 生成函数的问题，`MX_DMA_Init()` 并没有初始化 DMA 数据；`MX_USART1_UART_Init();` 中才初始化。而不开启 DMA 的时钟是没办法初始化 DMA 数据的。
+
+如何测试 DMA 是否真的不占用 CPU？
+
+串口传送 1940 个字节，波特率 115200，即 1s 发送 14400 个字节，串口发数据会占用 0.135s。
+
+对比使用 DMA 和不使用 DMA 的 UART 发送 10s（每一次加一个 500ms 软件延时），根据发送的字节数量做对比。
+
+- DMA：37520B
+- 无 DMA：31040B

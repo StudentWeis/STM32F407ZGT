@@ -46,8 +46,8 @@
 /* Private variables ---------------------------------------------------------*/
 
 /* USER CODE BEGIN PV */
-RTC_DateTypeDef GetData; // 获取日期结构�?
-RTC_TimeTypeDef GetTime; // 获取时间结构�?
+RTC_DateTypeDef GetData;
+RTC_TimeTypeDef GetTime;
 
 /* USER CODE END PV */
 
