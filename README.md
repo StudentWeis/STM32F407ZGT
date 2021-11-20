@@ -97,3 +97,19 @@ https://gitee.com/weihengyi/STM32F407ZGT_Demo
 
 - DMA：37520B
 - 无 DMA：31040B
+
+### 任务5
+
+测试低功耗模式 Sleep
+
+参考：https://blog.csdn.net/qq_36347513/article/details/114323123
+
+要注意 systick 中断问题，否则会直接激活睡眠。
+
+### 任务6
+
+测试低功耗模式 Stop
+
+参考：https://blog.csdn.net/qq_36347513/article/details/114525628
+
+要注意唤醒之后需要重新配置时钟。
