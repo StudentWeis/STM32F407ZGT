@@ -76,6 +76,8 @@ https://gitee.com/weihengyi/STM32F407ZGT_Demo
 - 如何关闭电池？为了节能。
 
   换回 LSI 时钟就行，默认不开启 LSE 即可。
+  
+  
 
 ### 任务4
 
@@ -108,8 +110,21 @@ https://gitee.com/weihengyi/STM32F407ZGT_Demo
 
 ### 任务6
 
-测试低功耗模式 Stop
+测试低功耗模式 Standby，通过 RTC 唤醒。
 
-参考：https://blog.csdn.net/qq_36347513/article/details/114525628
 
-要注意唤醒之后需要重新配置时钟。
+```mermaid
+flowchart LR
+    id[小灯亮灭亮 3s] --> id2[待机 7s] --> id3[自动唤醒] --> id
+```
+
+问题1：无法 Wakeup。因为跳过了 RTC init，解决了好久这个问题。
+
+问题2：唤醒之后持续被唤醒。因为没有清除唤醒标志位（RM 140P）：
+
+```c
+__HAL_PWR_CLEAR_FLAG(PWR_FLAG_WU);
+```
+
+参考手册有 Safe RTC alternate function wakeup flag clearing sequence，应该仔细查看。
+
