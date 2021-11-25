@@ -128,3 +128,27 @@ __HAL_PWR_CLEAR_FLAG(PWR_FLAG_WU);
 
 参考手册有 Safe RTC alternate function wakeup flag clearing sequence，应该仔细查看。
 
+### 任务7
+
+测试 SPI 读写 Flash W25Q16
+
+下载 [W25Q16](https://www.winbond.com/hq/product/code-storage-flash-memory/serial-nor-flash/?__locale=en&partNo=W25Q16JV) 数据手册；
+
+1. 首先读取 ID 测试 SPI 通信；
+
+​	问题1：CubeMX 默认使用的 SPI 引脚与开发板上的连接不同 ，更换引脚后正常。
+
+​	读取 ID=9Fh 之后会先收到 Winbond Serial Flash：EFh，然后收到 4015h。
+
+2. 然后测试读写数据。
+
+   参考：
+
+   https://www.pianshen.com/article/2084546465
+
+   https://blog.csdn.net/qq_36347513/article/details/113252061
+
+   问题：全片擦除之后写不进去；
+
+
+
