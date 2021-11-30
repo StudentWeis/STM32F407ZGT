@@ -1,21 +1,21 @@
 /* USER CODE BEGIN Header */
 /**
-  ******************************************************************************
-  * @file           : main.c
-  * @brief          : Main program body
-  ******************************************************************************
-  * @attention
-  *
-  * <h2><center>&copy; Copyright (c) 2021 STMicroelectronics.
-  * All rights reserved.</center></h2>
-  *
-  * This software component is licensed by ST under BSD 3-Clause license,
-  * the "License"; You may not use this file except in compliance with the
-  * License. You may obtain a copy of the License at:
-  *                        opensource.org/licenses/BSD-3-Clause
-  *
-  ******************************************************************************
-  */
+ ******************************************************************************
+ * @file           : main.c
+ * @brief          : Main program body
+ ******************************************************************************
+ * @attention
+ *
+ * <h2><center>&copy; Copyright (c) 2021 STMicroelectronics.
+ * All rights reserved.</center></h2>
+ *
+ * This software component is licensed by ST under BSD 3-Clause license,
+ * the "License"; You may not use this file except in compliance with the
+ * License. You may obtain a copy of the License at:
+ *                        opensource.org/licenses/BSD-3-Clause
+ *
+ ******************************************************************************
+ */
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
@@ -26,6 +26,7 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include "stdio.h"
+#include "w25qxx.h"
 
 /* USER CODE END Includes */
 
@@ -36,49 +37,22 @@
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
-void W25Q16_WriteCMD(uint8_t PCMD);
-static uint8_t W25QXX_ReadSR(uint8_t reg);
-static void W25QXX_Wait_Busy(void);
-int W25QXX_Read(uint8_t* buffer, uint32_t start_addr, uint16_t nbytes);
-void W25QXX_Page_Program(uint8_t* dat, uint32_t WriteAddr, uint16_t nbytes);
-void W25QXX_Erase_Sector(uint32_t sector_addr);
+#define READ_ADDR 0x100000
+#define WRITE_ADDR 0x100000
+#define NUMBER_READ 30
 
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
 /* USER CODE BEGIN PM */
-#define ManufactDeviceID_CMD		0x90
-#define READ_STATU_REGISTER_1   0x05
-#define READ_STATU_REGISTER_2   0x35
-#define READ_DATA_CMD	      	  0x03
-#define WRITE_ENABLE_CMD	   	  0x06
-#define WRITE_DISABLE_CMD	   	  0x04
-#define SECTOR_ERASE_CMD	  	  0x20
-#define CHIP_ERASE_CMD	        0xc7
-#define PAGE_PROGRAM_CMD        0x02
-
-
-#define FLASH_SPI_CS_DOWN()				HAL_GPIO_WritePin(F_CS_GPIO_Port, F_CS_Pin, GPIO_PIN_RESET)
-#define FLASH_SPI_CS_UP()					HAL_GPIO_WritePin(F_CS_GPIO_Port, F_CS_Pin, GPIO_PIN_SET)
-
-#define SPI1_TRANSMIT(buf, size) 	HAL_SPI_Transmit(&hspi1, buf, size, 100)
-#define SPI1_RECEIEVE(buf, size) 	HAL_SPI_Receive(&hspi1, buf, size, 100)
-
-
-
-#define W25Q16_WRITE_ENABLE()		W25Q16_WriteCMD(0x06)
-#define W25Q16_WRITE()					W25Q16_WriteCMD(0x02)
-#define W25Q16_READ()						W25Q16_WriteCMD(0x03)
-#define W25Q16_ERASE_CHIP()			{W25Q16_WRITE_ENABLE(); W25Q16_WriteCMD(0x60);}
 
 /* USER CODE END PM */
 
 /* Private variables ---------------------------------------------------------*/
 
 /* USER CODE BEGIN PV */
-uint8_t read_buf[10] = {0};
-uint8_t write_buf[10] = {0};
-int i;
+uint8_t read_buf[300];
+uint8_t write_buf[300];
 
 /* USER CODE END PV */
 
@@ -100,10 +74,6 @@ void SystemClock_Config(void);
 int main(void)
 {
   /* USER CODE BEGIN 1 */
-	uint8_t ID[3];
-	uint8_t CMD_ID[1] = {0x9f};
-
-	
 
   /* USER CODE END 1 */
 
@@ -128,69 +98,44 @@ int main(void)
   MX_USART1_UART_Init();
   MX_SPI1_Init();
   /* USER CODE BEGIN 2 */
-	printf("This is the exercise by WEI\r\n");
-	FLASH_SPI_CS_DOWN();
-	HAL_SPI_Transmit(&hspi1, CMD_ID, 1, 1000);
-	HAL_SPI_Receive(&hspi1, ID, 3, 1000);
-	FLASH_SPI_CS_UP();
-	printf("W25Qxxx ID is : %02X0x%02X%02X \r\n\r\n", ID[0], ID[1], ID[2]);
-	
-	
-	 /* 为了验证，首先读取要写入地址处的数据 */
-  printf("-------- read data before write -----------\r\n");
-  W25QXX_Read(read_buf, 0, 10);
-    
-  for(i = 0; i < 10; i++) 
+  // printf("This is the test of W25Qxx by StudentWei\r\n");
+  // printf("W25Qxxx ID is: 0x%02X\r\n", W25QXX_ReadID());
+
+  printf("-------- Read data before write -----------\r\n");
+  W25QXX_Read(read_buf, READ_ADDR, NUMBER_READ);
+  for (int i = 0; i < NUMBER_READ; i++)
   {
-    printf("[0x%08x]:0x%02x\r\n", i, *(read_buf+i));
+    printf("[0x%06x]:0x%02x\r\n", READ_ADDR + i, *(read_buf + i));
   }
-    
-  /* 擦除该扇区 */
+
+
   printf("-------- erase sector 0 -----------\r\n");
-  W25QXX_Erase_Sector(0);
+  W25QXX_Erase_Sector(256);
 
-  /* 再次读数据 */
+
   printf("-------- read data after erase -----------\r\n");
-  W25QXX_Read(read_buf, 0, 10);
-  for(i = 0; i < 10; i++) 
+  W25QXX_Read(read_buf, READ_ADDR, NUMBER_READ);
+  for (int i = 0; i < NUMBER_READ; i++)
   {
-    printf("[0x%08x]:0x%02x\r\n", i, *(read_buf+i));
+    printf("[0x%06x]:0x%02x\r\n", READ_ADDR + i, *(read_buf + i));
   }
-    
-  /* 写数据 */
-  printf("-------- write data -----------\r\n");
-  for(i = 0; i < 10; i++) 
-  {
-    write_buf[i] = i;
-  }
-  W25QXX_Page_Program(write_buf, 0, 10);
-    
-  /* 再次读数据 */
-  printf("-------- read data after write -----------\r\n");
-  W25QXX_Read(read_buf, 0, 10);
-  for(i = 0; i < 10; i++) 
-  {
-    printf("[0x%08x]:0x%02x\r\n", i, *(read_buf+i));
-  }
-	
-//	for(uint16_t i; i < 256; i++)
-//	{
-//		DATA_TBuf[i] = i;
-//	}
-//	printf("TPrint:%d\r\n", DATA_TBuf[146]);
-//	printf("RPrint0:%d\r\n", DATA_RBuf[146]);
-//	
-//	W25Q16_ERASE_CHIP();
-//	W25QXX_Wait_Busy();
-//	
-//	W25QXX_Page_Program(DATA_TBuf, 0, 256);
-//	W25QXX_Wait_Busy();
-//	
-//	W25QXX_Read(DATA_RBuf, 0, 256);
-//	W25QXX_Wait_Busy();
-//	printf("RPrint1:%d\r\n", DATA_RBuf[146]);
 
-	
+
+  printf("-------- write data -----------\r\n");
+  for (int i = 0; i < NUMBER_READ; i++)
+  {
+    write_buf[i] = 0x34;
+  }
+  W25QXX_Write(write_buf, WRITE_ADDR, NUMBER_READ);
+
+
+  printf("-------- read data after write -----------\r\n");
+  W25QXX_Read(read_buf, READ_ADDR, NUMBER_READ);
+  for (int i = 0; i < NUMBER_READ; i++)
+  {
+    printf("[0x%06x]:0x%02x\r\n", READ_ADDR + i, *(read_buf + i));
+  }
+
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -256,150 +201,6 @@ int fputc(int ch, FILE *f)
   return ch;
 }
 
-// W25Q16 写指令函数
-void W25Q16_WriteCMD(uint8_t PCMD)
-{
-	uint8_t CMD[1];
-	CMD[0] = PCMD;
-	FLASH_SPI_CS_DOWN();
-	HAL_SPI_Transmit(&hspi1, CMD, 1, 1000);
-	FLASH_SPI_CS_UP();
-}
-
-
-/**
- * @brief     读取W25QXX的状态寄存器，W25Q64一共有2个状态寄存器
- * @param     reg  —— 状态寄存器编号(1~2)
- * @retval    状态寄存器的值
- */
-static uint8_t W25QXX_ReadSR(uint8_t reg)
-{
-    uint8_t result = 0; 
-    uint8_t send_buf[4] = {0x00,0x00,0x00,0x00};
-    switch(reg)
-    {
-        case 1:
-            send_buf[0] = READ_STATU_REGISTER_1;
-        case 2:
-            send_buf[0] = READ_STATU_REGISTER_2;
-        case 0:
-        default:
-            send_buf[0] = READ_STATU_REGISTER_1;
-    }
-    
-     /* 使能片选 */
-		FLASH_SPI_CS_DOWN();
-    if (HAL_OK == SPI1_TRANSMIT(send_buf, 4)) 
-    {
-        if (HAL_OK == SPI1_RECEIEVE(&result, 1)) 
-        {
-					FLASH_SPI_CS_UP();
-          return result;
-        }
-    }
-    /* 取消片选 */
-		FLASH_SPI_CS_UP();
-    return 0;
-}
-
-/**
- * @brief	阻塞等待Flash处于空闲状态
- * @param   none
- * @retval  none
- */
-static void W25QXX_Wait_Busy(void)
-{
-    while((W25QXX_ReadSR(1) & 0x01) == 0x01); // 等待BUSY位清空
-}
-
-/**
- * @brief   读取SPI FLASH数据
- * @param   buffer      —— 数据存储区
- * @param   start_addr  —— 开始读取的地址(最大32bit)
- * @param   nbytes      —— 要读取的字节数(最大65535)
- * @retval  成功返回0，失败返回-1
- */
-int W25QXX_Read(uint8_t* buffer, uint32_t start_addr, uint16_t nbytes)
-{
-	uint8_t cmd = READ_DATA_CMD;
-	start_addr = start_addr << 8;
-	W25QXX_Wait_Busy();
-    
-     /* 使能片选 */
-	FLASH_SPI_CS_DOWN();
-
-  SPI1_TRANSMIT(&cmd, 1);
-	if (HAL_OK == SPI1_TRANSMIT((uint8_t*)&start_addr, 3)) 
-	{
-			if (HAL_OK == SPI1_RECEIEVE(buffer, nbytes)) 
-			{
-					FLASH_SPI_CS_UP();
-					return 0;
-			}
-	}
-	FLASH_SPI_CS_UP();
-	return -1;
-}
-
-/**
- * @brief    页写入操作
- * @param    dat —— 要写入的数据缓冲区首地址
- * @param    WriteAddr —— 要写入的地址
- * @param   byte_to_write —— 要写入的字节数（0-256）
- * @retval    none
- */
-void W25QXX_Page_Program(uint8_t* dat, uint32_t WriteAddr, uint16_t nbytes)
-{
-    uint8_t cmd = PAGE_PROGRAM_CMD;
-    
-    WriteAddr <<= 8;
-    
-    W25Q16_WRITE_ENABLE();
-    
-    /* 使能片选 */
-    FLASH_SPI_CS_DOWN();
-    
-    SPI1_TRANSMIT(&cmd, 1);
-
-    SPI1_TRANSMIT((uint8_t*)&WriteAddr, 3);
-    
-    SPI1_TRANSMIT(dat, nbytes);
-    
-		FLASH_SPI_CS_UP();
-    
-    W25QXX_Wait_Busy();
-}
-
-/**
- * @brief    W25QXX擦除一个扇区
- * @param   sector_addr    —— 扇区地址 根据实际容量设置
- * @retval  none
- * @note    阻塞操作
- */
-void W25QXX_Erase_Sector(uint32_t sector_addr)
-{
-    uint8_t cmd = SECTOR_ERASE_CMD;
-    
-    sector_addr *= 4096;    //每个块有16个扇区，每个扇区的大小是4KB，需要换算为实际地址
-    sector_addr <<= 8;
-    
-    W25Q16_WRITE_ENABLE();
-    W25QXX_Wait_Busy();        //等待写使能完成
-   
-     /* 使能片选 */
-    FLASH_SPI_CS_DOWN();
-    
-    SPI1_TRANSMIT(&cmd, 1);
-    
-    SPI1_TRANSMIT((uint8_t*)&sector_addr, 3);
-    
-    FLASH_SPI_CS_UP();
-    
-    W25QXX_Wait_Busy();       //等待扇区擦除完成
-}
-
-
-
 /* USER CODE END 4 */
 
 /**
@@ -409,7 +210,7 @@ void W25QXX_Erase_Sector(uint32_t sector_addr)
 void Error_Handler(void)
 {
   /* USER CODE BEGIN Error_Handler_Debug */
-	printf("Error");
+  printf("Error");
   /* User can add his own implementation to report the HAL error return state */
   __disable_irq();
   while (1)

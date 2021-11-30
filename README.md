@@ -1,8 +1,12 @@
-STM32F407ZGTx CubeMX 练习
+STM32F407ZGTx CubeMX 练习仓库
 
-Firmware 版本：1.26.2
+CubeMX Firmware 版本：1.26.2
 
-https://gitee.com/weihengyi/STM32F407ZGT_Demo
+https://gitee.com/studentwei/STM32F407ZGT
+
+---
+
+本仓库以进阶 STM32 学习为目的，主要完成了以下几个任务：
 
 ### 任务0
 
@@ -149,6 +153,46 @@ __HAL_PWR_CLEAR_FLAG(PWR_FLAG_WU);
    https://blog.csdn.net/qq_36347513/article/details/113252061
 
    问题：全片擦除之后写不进去；
+
+3. 完成封装
+
+   - W25QXX 库函数
+     - SPI 的读写函数；
+     - W25Qxx 的读写函数；
+   
+   - W25Qxx 突破 Page 限制；
+   
+   问题：写和读的地址有问题：从0x000000开始读写都没有问题，从0x000000开始写，然后从0x000001开始读就不行了。
+   
+   解决方案：👇
+   
+   ```c
+   // 下面的发地址方式总是不行
+   uint32_t WriteAddrt = WriteAddr << 8;
+   FLASH_SPI_TRANSMIT((uint8_t *)&WriteAddrt, 3);
+   
+   // 换成下面这个就好了
+   cmd = (WriteAddr & 0xFF0000) >> 16;
+   FLASH_SPI_TRANSMIT(&cmd, 1);
+   cmd = (WriteAddr & 0xFF00) >> 8;
+   FLASH_SPI_TRANSMIT(&cmd, 1);
+   cmd = (WriteAddr & 0xFF);
+   ```
+   
+
+### 任务8
+
+测试 SPI DMA 读写 FLASH 
+
+
+
+
+
+
+
+
+
+
 
 
 
