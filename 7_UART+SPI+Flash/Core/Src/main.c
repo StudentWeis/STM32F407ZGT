@@ -37,8 +37,8 @@
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
-#define READ_ADDR 0x100000
-#define WRITE_ADDR 0x100000
+#define READ_ADDR 0x0000f1
+#define WRITE_ADDR 0x0000f1
 #define NUMBER_READ 30
 
 /* USER CODE END PD */
@@ -98,37 +98,29 @@ int main(void)
   MX_USART1_UART_Init();
   MX_SPI1_Init();
   /* USER CODE BEGIN 2 */
-  // printf("This is the test of W25Qxx by StudentWei\r\n");
-  // printf("W25Qxxx ID is: 0x%02X\r\n", W25QXX_ReadID());
 
+  printf("This is the test of W25Qxx by StudentWei\r\n");
+  printf("W25Qxxx ID is: 0x%02X\r\n", W25QXX_ReadID());
   printf("-------- Read data before write -----------\r\n");
   W25QXX_Read(read_buf, READ_ADDR, NUMBER_READ);
   for (int i = 0; i < NUMBER_READ; i++)
   {
     printf("[0x%06x]:0x%02x\r\n", READ_ADDR + i, *(read_buf + i));
   }
-
-
-  printf("-------- erase sector 0 -----------\r\n");
-  W25QXX_Erase_Sector(256);
-
-
+  printf("----------- erase sector 0 ---------------\r\n");
+  W25QXX_Erase_Sector(W25QXX_BYTE2SECTOR(READ_ADDR));
   printf("-------- read data after erase -----------\r\n");
-  W25QXX_Read(read_buf, READ_ADDR, NUMBER_READ);
+  W25QXX_Read(read_buf, READ_ADDR, NUMBER_READ); 
   for (int i = 0; i < NUMBER_READ; i++)
   {
     printf("[0x%06x]:0x%02x\r\n", READ_ADDR + i, *(read_buf + i));
   }
-
-
   printf("-------- write data -----------\r\n");
   for (int i = 0; i < NUMBER_READ; i++)
   {
     write_buf[i] = 0x34;
   }
-  W25QXX_Write(write_buf, WRITE_ADDR, NUMBER_READ);
-
-
+  W25QXX_WRITE_PAGES(write_buf, WRITE_ADDR);
   printf("-------- read data after write -----------\r\n");
   W25QXX_Read(read_buf, READ_ADDR, NUMBER_READ);
   for (int i = 0; i < NUMBER_READ; i++)

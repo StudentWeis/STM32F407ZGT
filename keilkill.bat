@@ -14,7 +14,6 @@ del *.__i /s
 del *.crf /s
 del *.o /s
 del *.d /s
-del *.axf /s
 del *.tra /s
 del *.dep /s           
 del JLinkLog.txt /s
@@ -22,4 +21,5 @@ del *.iex /s
 del *.htm /s
 ::del *.sct /s
 del *.map /s
+del *.scvd /s
 exit

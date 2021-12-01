@@ -4,6 +4,8 @@ CubeMX Firmware 版本：1.26.2
 
 https://gitee.com/studentwei/STM32F407ZGT
 
+https://github.com/StudentWeis/STM32F407ZGT
+
 ---
 
 本仓库以进阶 STM32 学习为目的，主要完成了以下几个任务：
@@ -81,7 +83,6 @@ https://gitee.com/studentwei/STM32F407ZGT
 
   换回 LSI 时钟就行，默认不开启 LSE 即可。
   
-  
 
 ### 任务4
 
@@ -156,12 +157,6 @@ __HAL_PWR_CLEAR_FLAG(PWR_FLAG_WU);
 
 3. 完成封装
 
-   - W25QXX 库函数
-     - SPI 的读写函数；
-     - W25Qxx 的读写函数；
-   
-   - W25Qxx 突破 Page 限制；
-   
    问题：写和读的地址有问题：从0x000000开始读写都没有问题，从0x000000开始写，然后从0x000001开始读就不行了。
    
    解决方案：👇
@@ -184,11 +179,21 @@ __HAL_PWR_CLEAR_FLAG(PWR_FLAG_WU);
 
 测试 SPI DMA 读写 FLASH 
 
+问题1：可以 SPI DMA 回环操作，但是无法驱动 FLASH。
 
+暂且搁置该任务，换任务为 SPI DMA 回环实验。
 
+连接 MOSI、MISO，使用 DMA 发送信息，然后通过串口打印出来。
 
+### 任务9
 
+双片 SPI DMA 通信 
 
+主机向从机发送数据，从机将接收到的数据 printf 出来。
+
+难点在于：从机如何向主机发送数据？
+
+测试 DMA 效率
 
 
 
