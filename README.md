@@ -193,11 +193,21 @@ __HAL_PWR_CLEAR_FLAG(PWR_FLAG_WU);
 
 难点在于：从机如何向主机发送数据？
 
-测试 DMA 效率
+测试 DMA 效率：重点在于不占用 CPU，所以要测试 CPU 完成时间；
 
+### 任务10
 
+MCU >> PC USB 通信
 
+```c
+CDC_Transmit_FS(Buf, *Len);
+```
 
+问题1：识别不到设备
 
+解决方法：增加 CubeMX 中的堆栈的大小 0x1200；
 
+参考：https://blog.csdn.net/13011803189/article/details/108669947
+
+https://blog.csdn.net/qq_16597387/article/details/93094052
 
