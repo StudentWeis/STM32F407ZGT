@@ -24,6 +24,7 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include "usbd_cdc_if.h"
+#include "string.h"
 
 /* USER CODE END Includes */
 
@@ -88,6 +89,8 @@ int main(void)
   MX_GPIO_Init();
   MX_USB_DEVICE_Init();
   /* USER CODE BEGIN 2 */
+	char *USB_Debug_Hello = "Hello World!\r\n";
+	CDC_Transmit_FS((uint8_t *)USB_Debug_Hello, strlen(USB_Debug_Hello));
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -95,6 +98,9 @@ int main(void)
   while (1)
   {
     /* USER CODE END WHILE */
+	
+		  CDC_Transmit_FS((uint8_t *)USB_Debug_Hello, strlen(USB_Debug_Hello));
+			HAL_Delay(1000);
 
     /* USER CODE BEGIN 3 */
   }

@@ -12,7 +12,7 @@ https://github.com/StudentWeis/STM32F407ZGT
 
 ### 任务0
 
-测试 UART，将此文件作为后续任务的模板。
+后续任务的模板。
 
 ### 任务1
 
@@ -211,3 +211,4 @@ CDC_Transmit_FS(Buf, *Len);
 
 https://blog.csdn.net/qq_16597387/article/details/93094052
 
+修改：双向通信
