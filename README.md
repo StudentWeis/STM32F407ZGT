@@ -212,3 +212,102 @@ CDC_Transmit_FS(Buf, *Len);
 https://blog.csdn.net/qq_16597387/article/details/93094052
 
 修改：双向通信
+
+### 任务 11
+
+FreeRTOS 点亮 LED 灯。
+
+默认配置，然后添加 LED 任务即可。
+
+### 任务 12
+
+USB 通信，测试 SPI 速度。
+
+先完成 USB Printf。
+
+#### 1 USB printf
+
+问题：和 UART 的略有不同。
+
+解决：需要查看 USB 是否 OK。
+
+参考：https://stackoverflow.com/a/51105007/15494484
+
+```c
+uint8_t CDC_Transmit_FS(uint8_t* Buf, uint16_t Len)
+{
+  uint8_t result = USBD_OK;
+  /* USER CODE BEGIN 7 */
+  USBD_CDC_HandleTypeDef *hcdc = (USBD_CDC_HandleTypeDef*)hUsbDeviceFS.pClassData;
+  if (hcdc->TxState != 0){
+    return USBD_BUSY;
+  }
+  USBD_CDC_SetTxBuffer(&hUsbDeviceFS, Buf, Len);
+  result = USBD_CDC_TransmitPacket(&hUsbDeviceFS);
+  /* USER CODE END 7 */
+  return result;
+}
+
+int fputc(int ch, FILE *f)
+{
+	while(!(CDC_Transmit_FS((uint8_t*)&ch, 1) == USBD_OK));
+	while(!(CDC_Transmit_FS((uint8_t*)&ch, 1) == USBD_BUSY));
+	return ch;
+}
+```
+
+#### 2 volatile
+
+问题 2：重启之后 `MY_USB_OK` 也没置 0。
+
+解决：需要在全局变量 `MY_USB_OK` 前加 `volatile`，表明这是一个经常会被更改的值，将其放置内存当中，避免被编译器优化。
+
+```c
+volatile uint8_t MY_USB_OK;
+```
+
+#### 3 测速
+
+31 ms
+
+150*255 Byte
+
+1.23 MByte/s
+
+问题：远远不足设置的频率。
+
+参考：https://www.amobbs.com/thread-4948398-1-1.html
+
+思考：可能是因为STM32还要操作很多步骤，导致传数据所占用的时间不完全是SPI传输的时间。
+
+解决：
+
+- 打算使用 SPI DMA 的方式。
+- 取消 For 循环。
+
+#### 取消 For 循环
+
+速度升到了 1.4 MByte，For 循环确实有影响。
+
+### 任务 13
+
+USB 通信，测试 SPI DMA 速度。
+
+问题：怎么知道 DMA 数据发送结束了？
+
+- 应该用中断，但是中断有问题；
+
+  问题：无法进入回调函数；
+
+  解决：调整 NVIC 优先级后解决问题。
+
+  调低了 DMA 的中断优先级。
+
+- 用 delay 逐个测试；
+
+  7ms
+
+  20000 Byte
+
+  2.857 MByte/s
+
