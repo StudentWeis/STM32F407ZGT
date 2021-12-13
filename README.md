@@ -311,3 +311,24 @@ USB 通信，测试 SPI DMA 速度。
 
   2.857 MByte/s
 
+### 任务 14
+
+UART+DCMI+I2C+OV2640
+
+测试摄像头
+
+参考：https://github.com/SimpleMethod/STM32-OV2640
+
+问题：I2C 初始化失败。
+
+分析：可能是没有上拉。
+
+解决：先自己重新写一个初始化函数，测试一下 I2C 使用。
+
+### 任务 15
+
+I2C 双极通信测试
+
+主机向从机发送数据，从机做回声，主机将收到的数据从串口打印。
+
+参考：https://blog.csdn.net/weixin_42397123/article/details/110137296
