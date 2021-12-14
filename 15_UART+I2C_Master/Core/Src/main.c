@@ -101,11 +101,10 @@ int main(void)
 		printf("%c ", TBuffer[i]);
   }
 
-  // 主机 I2C 发�?�数�?
-  HAL_I2C_Master_Transmit(&hi2c1, 0x60, TBuffer, 10, 10);
-	printf("Tansmited.\r\n");
+  HAL_I2C_Master_Transmit(&hi2c1, 0xc0, TBuffer, 5, 10);
+//	printf("Tansmited.\r\n");
   // 中断等待接收数据
-  HAL_I2C_Master_Receive_IT(&hi2c1, 0x60, RBuffer, 10);
+  //HAL_I2C_Master_Receive_IT(&hi2c1, 0x60, RBuffer, 5);
 
   /* USER CODE END 2 */
 
@@ -180,6 +179,19 @@ int fgetc(FILE *f)
 void HAL_I2C_MasterRxCpltCallback(I2C_HandleTypeDef *hi2c)
 {
   printf("Receive String: %s.\r\n", RBuffer);
+	HAL_I2C_Master_Receive_IT(&hi2c1, 0x60, RBuffer, 5);
+}
+
+void HAL_I2C_ErrorCallback(I2C_HandleTypeDef *I2cHandle)
+{
+// 打印I2C错误类型  
+//	error type 1:  HAL_I2C_ERROR_BEER    Bus error	 		总线错误			   
+//	error type 4:  HAL_I2C_ERROR_AF  	 Acknowledge failure 应答错误
+	printf("error type  %x \n",HAL_I2C_GetError(I2cHandle));
+// 先注�?I2C硬件,释放I2C接口,再重启I2C
+	HAL_I2C_DeInit(I2cHandle);
+	MX_I2C1_Init();
+	//HAL_I2C_Master_Receive_IT(&hi2c1, 0x60, RBuffer, 5);
 }
 
 /* USER CODE END 4 */

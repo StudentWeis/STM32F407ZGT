@@ -91,7 +91,7 @@ int main(void)
   MX_I2C1_Init();
   /* USER CODE BEGIN 2 */
 
-  HAL_I2C_Slave_Receive_IT(&hi2c1, RBuffer, 10);
+  HAL_I2C_Slave_Receive_IT(&hi2c1, RBuffer, 5);
 
   /* USER CODE END 2 */
 
@@ -152,8 +152,9 @@ void SystemClock_Config(void)
 /* USER CODE BEGIN 4 */
 void HAL_I2C_SlaveRxCpltCallback(I2C_HandleTypeDef *hi2c)
 {
-  HAL_GPIO_WritePin(LED1_GPIO_Port, LED1_Pin, GPIO_PIN_RESET);
-	HAL_I2C_Slave_Transmit(&hi2c1, RBuffer, 10, 10);
+  HAL_GPIO_WritePin(LED1_GPIO_Port, LED1_Pin, GPIO_PIN_SET);
+	HAL_I2C_Slave_Transmit(&hi2c1, RBuffer, 10, 5);
+	HAL_I2C_Slave_Receive_IT(&hi2c1, RBuffer, 5);
 }
 
 /* USER CODE END 4 */
