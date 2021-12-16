@@ -53,8 +53,22 @@
 /* Private variables ---------------------------------------------------------*/
 
 /* USER CODE BEGIN PV */
+
+#define RES160X120
+// #define RES320X240
+// #define RES640X480
+// #define RES800x600
+// #define RES1024x768
+// #define RES1280x960
+#ifdef RES320X240
 enum imageResolution imgRes = RES_320X240;
 uint8_t frameBuffer[RES_320X240] = {0};
+#endif
+
+#ifdef RES160X120
+enum imageResolution imgRes = RES_160X120;
+uint8_t frameBuffer[RES_160X120] = {0};
+#endif
 
 uint8_t mutex = 0;
 uint16_t bufferPointer = 0;
@@ -79,9 +93,9 @@ void SystemClock_Config(void);
 /* USER CODE END 0 */
 
 /**
-  * @brief  The application entry point.
-  * @retval int
-  */
+ * @brief  The application entry point.
+ * @retval int
+ */
 int main(void)
 {
   /* USER CODE BEGIN 1 */
@@ -113,43 +127,47 @@ int main(void)
   MX_TIM7_Init();
   /* USER CODE BEGIN 2 */
 
-//  // 等待�?�?
-//  uint8_t a[1];
-//  printf("Input a.\r\n");
-//  scanf("%c", a);
-//  if (a[0] == 'a')
-//    printf("Hello World!\r\n");
-
-	HAL_GPIO_WritePin(CAMERA_PWDN_GPIO_Port, CAMERA_RESET_Pin, GPIO_PIN_RESET);
-	HAL_Delay(10);
-	HAL_GPIO_WritePin(CAMERA_RESET_GPIO_Port, CAMERA_RESET_Pin, GPIO_PIN_RESET);
-	HAL_Delay(10);
-	HAL_GPIO_WritePin(CAMERA_RESET_GPIO_Port, CAMERA_RESET_Pin, GPIO_PIN_SET);
-	HAL_Delay(10);
-	
-  HAL_I2C_Master_Transmit(&hi2c2, (uint16_t)0x60, Tbuffer1, 2, 100);
-	HAL_Delay(100);
-	
-  HAL_I2C_Master_Transmit(&hi2c2, (uint16_t)0x60, Tbuffer2, 2, 100);
-  HAL_Delay(100);
-
-	HAL_I2C_Master_Transmit(&hi2c2, (uint16_t)0x60, Tbuffer3, 1, 100);
-	HAL_I2C_Master_Receive(&hi2c2, (uint16_t)0x60, RBuffer, 1, 100);
-  HAL_I2C_Mem_Read(&hi2c2, 0x60, 0x0B, 1, RBuffer, 1, 100);
-  printf("%x\r\n", RBuffer[0]);
-
-  // 等待下一环节
-	uint8_t a[1];
-  printf("Input b.\r\n");
+  // 等待�???�???
+  uint8_t a[1];
+  printf("Input a.\r\n");
   scanf("%c", a);
-  if (a[0] == 'b')
+  if (a[0] == 'a')
     printf("Hello World!\r\n");
+
+  // HAL_GPIO_WritePin(CAMERA_PWDN_GPIO_Port, CAMERA_PWDN_Pin, GPIO_PIN_RESET);
+  // HAL_Delay(10);
+  // HAL_GPIO_WritePin(CAMERA_RESET_GPIO_Port, CAMERA_RESET_Pin, GPIO_PIN_RESET);
+  // HAL_Delay(10);
+  // HAL_GPIO_WritePin(CAMERA_RESET_GPIO_Port, CAMERA_RESET_Pin, GPIO_PIN_SET);
+  // HAL_Delay(10);
+
+  // HAL_I2C_Master_Transmit(&hi2c2, 0xc0, Tbuffer1, 2, 100);
+  // //SCCB_Write(0xff, 0x01);
+  // HAL_Delay(10);
+
+  // HAL_I2C_Master_Transmit(&hi2c2, 0xc0, Tbuffer2, 2, 100);
+  // HAL_Delay(10);
+
+  // OV2640_ResolutionOptions(imgRes);
 
   OV2640_Init(&hi2c2, &hdcmi);
   HAL_Delay(10);
   OV2640_ResolutionOptions(imgRes);
   HAL_Delay(10);
-  printf("Flag1\r\n");
+
+  HAL_I2C_Mem_Read(&hi2c2, 0x60, 0x0A, 1, RBuffer, 1, 100);
+  printf("%x\r\n", RBuffer[0]);
+
+  //  // 等待下一环节
+  //	a[0] = 0;
+  //  printf("Input b.\r\n");
+  //  scanf("%c", a);
+  //  if (a[0] == 'b')
+  // OV2640_Init(&hi2c2, &hdcmi);
+  // HAL_Delay(10);
+  // OV2640_ResolutionOptions(imgRes);
+  // HAL_Delay(10);
+  mutex = 1;
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -159,26 +177,75 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
+    if (mutex == 1)
+    {
+      __HAL_DCMI_ENABLE_IT(&hdcmi, DCMI_IT_FRAME);
+      memset(frameBuffer, 0, sizeof frameBuffer);
+      OV2640_CaptureSnapshot((uint32_t)frameBuffer, imgRes);
+
+      while (1)
+      {
+        if (headerFound == 0 && frameBuffer[bufferPointer] == 0xFF && frameBuffer[bufferPointer + 1] == 0xD8)
+        {
+          headerFound = 1;
+#ifdef DEBUG
+          printf("Found header of JPEG file \r\n");
+#endif
+        }
+        if (headerFound == 1 && frameBuffer[bufferPointer] == 0xFF && frameBuffer[bufferPointer + 1] == 0xD9)
+        {
+          bufferPointer = bufferPointer + 2;
+#ifdef DEBUG
+          printf("Found EOF of JPEG file \r\n");
+#endif
+          headerFound = 0;
+          break;
+        }
+
+        if (bufferPointer >= 65535)
+        {
+          //break;
+					bufferPointer = 0;
+					printf("Flag");
+        }
+        bufferPointer++;
+      }
+#ifdef DEBUG
+      printf("Image size: %d bytes \r\n", bufferPointer);
+#endif
+
+      HAL_UART_Transmit_DMA(&huart3, frameBuffer, bufferPointer); // Use of DMA may be necessary for larger data streams.
+      bufferPointer = 0;
+      mutex = 0;
+    }
+    else
+    {
+      mutex = 1;
+    }
+    while (1)
+    {
+      /* code */
+    }
   }
   /* USER CODE END 3 */
 }
 
 /**
-  * @brief System Clock Configuration
-  * @retval None
-  */
+ * @brief System Clock Configuration
+ * @retval None
+ */
 void SystemClock_Config(void)
 {
   RCC_OscInitTypeDef RCC_OscInitStruct = {0};
   RCC_ClkInitTypeDef RCC_ClkInitStruct = {0};
 
   /** Configure the main internal regulator output voltage
-  */
+   */
   __HAL_RCC_PWR_CLK_ENABLE();
   __HAL_PWR_VOLTAGESCALING_CONFIG(PWR_REGULATOR_VOLTAGE_SCALE1);
   /** Initializes the RCC Oscillators according to the specified parameters
-  * in the RCC_OscInitTypeDef structure.
-  */
+   * in the RCC_OscInitTypeDef structure.
+   */
   RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSE;
   RCC_OscInitStruct.HSEState = RCC_HSE_ON;
   RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
@@ -192,9 +259,8 @@ void SystemClock_Config(void)
     Error_Handler();
   }
   /** Initializes the CPU, AHB and APB buses clocks
-  */
-  RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_HCLK|RCC_CLOCKTYPE_SYSCLK
-                              |RCC_CLOCKTYPE_PCLK1|RCC_CLOCKTYPE_PCLK2;
+   */
+  RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_HCLK | RCC_CLOCKTYPE_SYSCLK | RCC_CLOCKTYPE_PCLK1 | RCC_CLOCKTYPE_PCLK2;
   RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_PLLCLK;
   RCC_ClkInitStruct.AHBCLKDivider = RCC_SYSCLK_DIV1;
   RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV4;
@@ -232,9 +298,9 @@ void HAL_Delay_US(uint32_t Delay_us)
 /* USER CODE END 4 */
 
 /**
-  * @brief  This function is executed in case of error occurrence.
-  * @retval None
-  */
+ * @brief  This function is executed in case of error occurrence.
+ * @retval None
+ */
 void Error_Handler(void)
 {
   /* USER CODE BEGIN Error_Handler_Debug */
@@ -246,14 +312,14 @@ void Error_Handler(void)
   /* USER CODE END Error_Handler_Debug */
 }
 
-#ifdef  USE_FULL_ASSERT
+#ifdef USE_FULL_ASSERT
 /**
-  * @brief  Reports the name of the source file and the source line number
-  *         where the assert_param error has occurred.
-  * @param  file: pointer to the source file name
-  * @param  line: assert_param error line source number
-  * @retval None
-  */
+ * @brief  Reports the name of the source file and the source line number
+ *         where the assert_param error has occurred.
+ * @param  file: pointer to the source file name
+ * @param  line: assert_param error line source number
+ * @retval None
+ */
 void assert_failed(uint8_t *file, uint32_t line)
 {
   /* USER CODE BEGIN 6 */
@@ -262,4 +328,3 @@ void assert_failed(uint8_t *file, uint32_t line)
   /* USER CODE END 6 */
 }
 #endif /* USE_FULL_ASSERT */
-

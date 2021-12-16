@@ -256,6 +256,8 @@ void OV2640_Init(I2C_HandleTypeDef *p_hi2c, DCMI_HandleTypeDef *p_hdcmi) {
 	phdcmi = p_hdcmi;
 
 	// Hardware reset
+	// HAL_GPIO_WritePin(CAMERA_PWDN_GPIO_Port, CAMERA_PWDN_Pin, GPIO_PIN_RESET);
+    // HAL_Delay(10);
 	HAL_GPIO_WritePin(CAMERA_RESET_GPIO_Port, CAMERA_RESET_Pin, GPIO_PIN_RESET);
 	HAL_Delay(100);
 	HAL_GPIO_WritePin(CAMERA_RESET_GPIO_Port, CAMERA_RESET_Pin, GPIO_PIN_SET);
@@ -306,7 +308,6 @@ void OV2640_ResolutionOptions(uint16_t opt) {
 		OV2640_ResolutionConfiguration(1);
 		break;
 	}
-
 }
 
 /**
@@ -557,7 +558,7 @@ short SCCB_Write(uint8_t reg_addr, uint8_t data) {
 	buffer[0] = reg_addr;
 	buffer[1] = data;
 	__disable_irq();
-	connectionStatus = HAL_I2C_Master_Transmit(phi2c, (uint16_t) 0x60, buffer,
+	connectionStatus = HAL_I2C_Master_Transmit(phi2c, 0xc0, buffer,
 			2, 100);
 	if (connectionStatus == HAL_OK) {
 		opertionStatus = 1;
@@ -578,10 +579,10 @@ short SCCB_Read(uint8_t reg_addr, uint8_t *pdata) {
 	short opertionStatus = 0;
 	HAL_StatusTypeDef connectionStatus;
 	__disable_irq();
-	connectionStatus = HAL_I2C_Master_Transmit(phi2c, (uint16_t) 0x60,
+	connectionStatus = HAL_I2C_Master_Transmit(phi2c, 0xc0,
 			&reg_addr, 1, 100);
 	if (connectionStatus == HAL_OK) {
-		connectionStatus = HAL_I2C_Master_Receive(phi2c, (uint16_t) 0x61, pdata,
+		connectionStatus = HAL_I2C_Master_Receive(phi2c, (uint16_t) 0xc2, pdata,
 				1, 100);
 		if (connectionStatus == HAL_OK) {
 			opertionStatus = 0;

@@ -325,6 +325,16 @@ UART+DCMI+I2C+OV2640
 
 解决：先自己重新写一个初始化函数，测试一下 I2C 使用。
 
+使用了 Pull-up 之后，I2C 测试成功。
+
+问题：图片还是导不出来，可能是线太长了，换线应该会好一点。
+
+https://hexed.it
+
+https://blog.csdn.net/weixin_34267123/article/details/94558031
+
+https://www.arducam.com/docs/camera-breakout-board/2mp-ov2640/software-guide
+
 ### 任务 15
 
 I2C 双机通信测试
@@ -346,3 +356,14 @@ I2C 读取 MPU6050 数据
 
 分析：MPU6050 模块加了上拉电阻。
 
+加了 EXTI，按键中断发出读存储器指令，测试 I2C 的 HAL 库函数发送的时候到底传的什么地址。
+
+测试结束，是我自己的问题。
+
+### 任务 17
+
+写一个小型交互系统
+
+练习自己的 Shell，通过 USB 传递数据。
+
+把 USB 收到的数据拷贝到全局变量。

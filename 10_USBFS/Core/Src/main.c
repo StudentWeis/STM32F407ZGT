@@ -91,6 +91,9 @@ int main(void)
   /* USER CODE BEGIN 2 */
 	char *USB_Debug_Hello = "Hello World!\r\n";
 	CDC_Transmit_FS((uint8_t *)USB_Debug_Hello, strlen(USB_Debug_Hello));
+	
+	
+
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -151,6 +154,12 @@ void SystemClock_Config(void)
 }
 
 /* USER CODE BEGIN 4 */
+
+HAL_UART_RxCpltCallback()
+{
+	
+}
+	
 
 /* USER CODE END 4 */
 
