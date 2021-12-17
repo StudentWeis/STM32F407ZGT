@@ -10,11 +10,11 @@ https://github.com/StudentWeis/STM32F407ZGT
 
 本仓库以进阶 STM32 学习为目的，主要完成了以下几个任务：
 
-### 任务0
+### 任务 00
 
 后续任务的模板。
 
-### 任务1
+### 任务 01
 
 测试 SDIO
 
@@ -22,7 +22,7 @@ https://github.com/StudentWeis/STM32F407ZGT
 
 一次成功。
 
-### 任务2
+### 任务 02
 
 测试 FatFs
 
@@ -30,7 +30,7 @@ https://github.com/StudentWeis/STM32F407ZGT
 
 第一次失败：因为之前 SDIO 的学习中破坏了 SD 卡格式，所以需要先格式化再进行 FatFs 文件系统调用。格式化的文件系统是 FAT32（FatFs 默认）。
 
-### 任务3
+### 任务 03
 
 测试 RTC
 
@@ -84,7 +84,7 @@ https://github.com/StudentWeis/STM32F407ZGT
   换回 LSI 时钟就行，默认不开启 LSE 即可。
   
 
-### 任务4
+### 任务 04
 
 测试 UART+DMA。
 
@@ -105,7 +105,7 @@ https://github.com/StudentWeis/STM32F407ZGT
 - DMA：37520B
 - 无 DMA：31040B
 
-### 任务5
+### 任务 05
 
 测试低功耗模式 Sleep
 
@@ -113,7 +113,7 @@ https://github.com/StudentWeis/STM32F407ZGT
 
 要注意 systick 中断问题，否则会直接激活睡眠。
 
-### 任务6
+### 任务 06
 
 测试低功耗模式 Standby，通过 RTC 唤醒。
 
@@ -133,7 +133,7 @@ __HAL_PWR_CLEAR_FLAG(PWR_FLAG_WU);
 
 参考手册有 Safe RTC alternate function wakeup flag clearing sequence，应该仔细查看。
 
-### 任务7
+### 任务 07
 
 测试 SPI 读写 Flash W25Q16
 
@@ -175,7 +175,7 @@ __HAL_PWR_CLEAR_FLAG(PWR_FLAG_WU);
    ```
    
 
-### 任务8
+### 任务 08
 
 测试 SPI DMA 读写 FLASH 
 
@@ -185,7 +185,7 @@ __HAL_PWR_CLEAR_FLAG(PWR_FLAG_WU);
 
 连接 MOSI、MISO，使用 DMA 发送信息，然后通过串口打印出来。
 
-### 任务9
+### 任务 09
 
 双片 SPI DMA 通信 
 
@@ -195,7 +195,7 @@ __HAL_PWR_CLEAR_FLAG(PWR_FLAG_WU);
 
 测试 DMA 效率：重点在于不占用 CPU，所以要测试 CPU 完成时间；
 
-### 任务10
+### 任务 10
 
 MCU >> PC USB 通信
 
