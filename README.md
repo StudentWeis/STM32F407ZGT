@@ -1,48 +1,66 @@
-STM32F407ZGTx CubeMX 练习仓库
+# STM32F407ZGTx CubeMX 练习仓库
 
-CubeMX Firmware 版本：1.26.2
+**环境**
 
-https://gitee.com/studentwei/STM32F407ZGT
+CubeMX 版本：6.4.0
 
-https://github.com/StudentWeis/STM32F407ZGT
+CubeMX STM32F4xx Firmware 版本：1.26.2
+
+Keil 版本：5.32
+
+开发板：
+
+**仓库**
+
+- https://gitee.com/studentwei/STM32F407ZGT-CubeMX
+
+- https://github.com/StudentWeis/STM32F407ZGT-CubeMX
 
 ---
 
-本仓库以进阶 STM32 学习为目的，主要完成了以下几个任务：
+本仓库以进阶 STM32 学习为目的，以任务项目式分类学习各个外设，使用 CubeMX 开发。
 
 ### 任务 00
 
-后续任务的模板。
+**简介**：UART CubeMX 模板。
+
+**外设**：UART
 
 ### 任务 01
 
-测试 SDIO
+**简介**：测试 SDIO
 
-参考：https://blog.csdn.net/qq_42039294/article/details/112045786
+**外设**：UART、SDIO
 
-一次成功。
+**参考**：https://blog.csdn.net/qq_42039294/article/details/112045786
+
+**心得**：一次成功。
 
 ### 任务 02
 
-测试 FatFs
+**简介**：测试 FatFs
 
-参考：https://www.cnblogs.com/showtime20190824/p/11523402.html
+**外设**：UART、SDIO、FatFs
 
-第一次失败：因为之前 SDIO 的学习中破坏了 SD 卡格式，所以需要先格式化再进行 FatFs 文件系统调用。格式化的文件系统是 FAT32（FatFs 默认）。
+**参考**：https://www.cnblogs.com/showtime20190824/p/11523402.html
+
+**心得**：第一次失败：因为之前 SDIO 的学习中破坏了 SD 卡格式，所以需要先格式化再进行 FatFs 文件系统调用。格式化的文件系统是 FAT32（FatFs 默认）。
 
 ### 任务 03
 
-测试 RTC
+**简介**：测试 RTC，核心板硬件上装有低速 32kHz 晶振，且装有纽扣电池，可以进行测试。
 
-核心板硬件上装有低速 32kHz 晶振，且装有纽扣电池，可以进行测试。
-
-主要目标：
+**目标**：
 
 1. 基本时钟使用；
 2. 掉电继续运行；
 3. 关闭掉电继续运行模式；
 
-参考：https://blog.csdn.net/as480133937/article/details/105741893?spm=1001.2014.3001.5501
+**外设**：UART、RTC
+
+**参考**：https://blog.csdn.net/as480133937/article/details/105741893
+
+**心得**：
 
 - 时钟选择要选择 LSE，不要用默认的 LSI，这样掉电之后才有时钟。
 
@@ -86,24 +104,31 @@ https://github.com/StudentWeis/STM32F407ZGT
 
 ### 任务 04
 
-测试 UART+DMA。
+**简介**：测试 DMA UART 速度。
 
-参考：https://blog.csdn.net/as480133937/article/details/104827639
+**外设**：UART、DMA
 
-问题：CubeMX 生成的初始化函数顺序有问题，DMA 应该在 UART 之前。
+**目标**：串口
 
-原因剖析：https://shequ.stmicroelectronics.cn/forum.php?mod=viewthread&tid=622385
+**参考**：https://blog.csdn.net/as480133937/article/details/104827639
 
-是 CubeMX 生成函数的问题，`MX_DMA_Init()` 并没有初始化 DMA 数据；`MX_USART1_UART_Init();` 中才初始化。而不开启 DMA 的时钟是没办法初始化 DMA 数据的。
+**心得**：
 
-如何测试 DMA 是否真的不占用 CPU？
+- CubeMX 生成的初始化函数顺序有问题，DMA 应该在 UART 之前。
 
-串口传送 1940 个字节，波特率 115200，即 1s 发送 14400 个字节，串口发数据会占用 0.135s。
+  原因剖析：https://shequ.stmicroelectronics.cn/forum.php?mod=viewthread&tid=622385
 
-对比使用 DMA 和不使用 DMA 的 UART 发送 10s（每一次加一个 500ms 软件延时），根据发送的字节数量做对比。
+  是 CubeMX 生成函数的问题，`MX_DMA_Init()` 并没有初始化 DMA 数据；`MX_USART1_UART_Init();` 中才初始化。而不开启 DMA 的时钟是没办法初始化 DMA 数据的。
 
-- DMA：37520B
-- 无 DMA：31040B
+- 如何测试 DMA 是否真的不占用 CPU？
+
+  串口传送 1940 个字节，波特率 115200，即 1s 发送 14400 个字节，串口发数据会占用 0.135s。
+
+  对比使用 DMA 和不使用 DMA 的 UART 发送 10s（每一次加一个 500ms 软件延时），根据发送的字节数量做对比。
+
+  DMA：37520B
+
+  无 DMA：31040B
 
 ### 任务 05
 
@@ -197,21 +222,22 @@ __HAL_PWR_CLEAR_FLAG(PWR_FLAG_WU);
 
 ### 任务 10
 
-MCU >> PC USB 通信
+USBFS 通信模板
 
 ```c
 CDC_Transmit_FS(Buf, *Len);
 ```
 
-问题1：识别不到设备
+**问题记录**：
 
-解决方法：增加 CubeMX 中的堆栈的大小 0x1200；
+- 识别不到设备
 
-参考：https://blog.csdn.net/13011803189/article/details/108669947
+  解决：增加 CubeMX 中的堆栈的大小至 0x1200；
 
-https://blog.csdn.net/qq_16597387/article/details/93094052
+  参考：
 
-修改：双向通信
+  - https://blog.csdn.net/13011803189/article/details/108669947
+  - https://blog.csdn.net/qq_16597387/article/details/93094052
 
 ### 任务 11
 
@@ -362,8 +388,15 @@ I2C 读取 MPU6050 数据
 
 ### 任务 17
 
-写一个小型交互系统
+**简介**：
 
-练习自己的 Shell，通过 USB 传递数据。
+**外设**：USBFS、TIM
 
-把 USB 收到的数据拷贝到全局变量。
+标准 TIM 定时。
+
+### 任务 18
+
+**简介**：FSMC 驱动外部 SRAM 读写数据。
+
+**外设**：USBFS、FSMC
+

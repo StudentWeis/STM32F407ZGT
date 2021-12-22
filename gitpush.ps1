@@ -1,4 +1,5 @@
-./keilkill.bat
+./kill.bat
 git add .
 git commit -m $args[0]
-git push origin main
+git push github main
+git push gitee main
