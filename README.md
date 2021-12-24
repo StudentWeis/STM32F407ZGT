@@ -339,30 +339,6 @@ USB 通信，测试 SPI DMA 速度。
 
 ### 任务 14
 
-UART+DCMI+I2C+OV2640
-
-测试摄像头
-
-参考：https://github.com/SimpleMethod/STM32-OV2640
-
-问题：I2C 初始化失败。
-
-分析：可能是没有上拉。
-
-解决：先自己重新写一个初始化函数，测试一下 I2C 使用。
-
-使用了 Pull-up 之后，I2C 测试成功。
-
-问题：图片还是导不出来，可能是线太长了，换线应该会好一点。
-
-https://hexed.it
-
-https://blog.csdn.net/weixin_34267123/article/details/94558031
-
-https://www.arducam.com/docs/camera-breakout-board/2mp-ov2640/software-guide
-
-### 任务 15
-
 I2C 双机通信测试
 
 主机向从机发送数据，从机收到数据之后熄灭 LED 灯。
@@ -374,7 +350,7 @@ I2C 双机通信测试
 - 可以外加上拉电阻，也可以设置 GPIO Pull-up；
 - STM32 CubeMX+HAL 的一个库函数有问题：主机发送的地址少右移了一位。需要提前右移。
 
-### 任务 16
+### 任务 15
 
 I2C 读取 MPU6050 数据
 
@@ -386,7 +362,7 @@ I2C 读取 MPU6050 数据
 
 测试结束，是我自己的问题。
 
-### 任务 17
+### 任务 16
 
 **简介**：
 
@@ -394,7 +370,7 @@ I2C 读取 MPU6050 数据
 
 标准 TIM 定时。
 
-### 任务 18
+### 任务 17
 
 **简介**：FSMC 驱动外部 SRAM 读写数据。
 

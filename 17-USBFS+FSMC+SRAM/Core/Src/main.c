@@ -6,28 +6,25 @@
  ******************************************************************************
  * @attention
  *
- * <h2><center>&copy; Copyright (c) 2021 STMicroelectronics.
- * All rights reserved.</center></h2>
+ * Copyright (c) 2021 STMicroelectronics.
+ * All rights reserved.
  *
- * This software component is licensed by ST under BSD 3-Clause license,
- * the "License"; You may not use this file except in compliance with the
- * License. You may obtain a copy of the License at:
- *                        opensource.org/licenses/BSD-3-Clause
+ * This software is licensed under terms that can be found in the LICENSE file
+ * in the root directory of this software component.
+ * If no LICENSE file comes with this software, it is provided AS-IS.
  *
  ******************************************************************************
  */
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
-#include "dma.h"
-#include "fatfs.h"
-#include "sdio.h"
-#include "usart.h"
+#include "usb_device.h"
 #include "gpio.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-#include "stdio.h"
+#include <stdio.h>
+#include "usbd_cdc_if.h"
 
 /* USER CODE END Includes */
 
@@ -38,6 +35,7 @@
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
+#define MY_GET_TICK() printf("tick: %d\r\n", HAL_GetTick())
 
 /* USER CODE END PD */
 
@@ -47,13 +45,11 @@
 /* USER CODE END PM */
 
 /* Private variables ---------------------------------------------------------*/
-
 /* USER CODE BEGIN PV */
-uint32_t byteswritten;                                /* File write counts */
-uint32_t bytesread;                                   /* File read counts */
-uint8_t wtext[] = "This is STM32 working with FatFs"; /* File write buffer */
-uint8_t rtext[100];                                   /* File read buffers */
-char filename[] = "STM32cube.txt";
+uint8_t Txbuffer[10000]; // 待发送数据
+uint8_t YYY[] = "Hello World!";
+volatile uint8_t MY_USB_OK;
+
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -95,41 +91,23 @@ int main(void)
 
     /* Initialize all configured peripherals */
     MX_GPIO_Init();
-    MX_USART1_UART_Init();
-    MX_SDIO_SD_Init();
-    MX_DMA_Init();
-    MX_FATFS_Init();
+    MX_USB_DEVICE_Init();
     /* USER CODE BEGIN 2 */
-    HAL_GPIO_WritePin(LED1_GPIO_Port, LED1_Pin, GPIO_PIN_RESET);
-    printf("****** FatFs Example ******\r\n");
-    retSD = f_mount(&SDFatFS, "0:", 0);
-    if (retSD)
+    while (!MY_USB_OK)
+        ;
+    MY_USB_OK = 0;
+    printf("Hello World! Wei\r\n");
+    for (uint16_t i = 0; i < 10000; i++)
     {
-        printf("****** mount error ******\r\n");
+        Txbuffer[i] = 0x62;
     }
-    else
-        printf("****** mount success!!! ******\r\n");
-    retSD = f_open(&SDFile, filename, FA_CREATE_ALWAYS | FA_WRITE);
-    if (retSD)
-    {
-        printf("****** open file error ******\r\n");
-    }
-    else
-        printf("****** open file success!!! ******\r\n");
-    retSD = f_write(&SDFile, wtext, sizeof(wtext), (void *)&byteswritten);
-    if (retSD)
-    {
-        printf("****** write file error ******\r\n");
-    }
-    else
-        printf("****** write file success!!! ******\r\n");
-    retSD = f_close(&SDFile);
-    if (retSD)
-    {
-        printf("****** close file error ******\r\n");
-    }
-    else
-        printf("****** close file success!!! ******\r\n");
+    MY_GET_TICK();
+    HAL_Delay(10);
+    CDC_Transmit_FS((uint8_t *)Txbuffer, 10000);
+    while (!MY_USB_OK)
+        ;
+    MY_USB_OK = 0;
+    MY_GET_TICK();
 
     /* USER CODE END 2 */
 
@@ -137,7 +115,6 @@ int main(void)
     /* USER CODE BEGIN WHILE */
     while (1)
     {
-
         /* USER CODE END WHILE */
 
         /* USER CODE BEGIN 3 */
@@ -166,9 +143,9 @@ void SystemClock_Config(void)
     RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
     RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSE;
     RCC_OscInitStruct.PLL.PLLM = 4;
-    RCC_OscInitStruct.PLL.PLLN = 72;
+    RCC_OscInitStruct.PLL.PLLN = 168;
     RCC_OscInitStruct.PLL.PLLP = RCC_PLLP_DIV2;
-    RCC_OscInitStruct.PLL.PLLQ = 3;
+    RCC_OscInitStruct.PLL.PLLQ = 7;
     if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK)
     {
         Error_Handler();
@@ -178,10 +155,10 @@ void SystemClock_Config(void)
     RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_HCLK | RCC_CLOCKTYPE_SYSCLK | RCC_CLOCKTYPE_PCLK1 | RCC_CLOCKTYPE_PCLK2;
     RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_PLLCLK;
     RCC_ClkInitStruct.AHBCLKDivider = RCC_SYSCLK_DIV1;
-    RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV2;
-    RCC_ClkInitStruct.APB2CLKDivider = RCC_HCLK_DIV1;
+    RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV4;
+    RCC_ClkInitStruct.APB2CLKDivider = RCC_HCLK_DIV2;
 
-    if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_2) != HAL_OK)
+    if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_5) != HAL_OK)
     {
         Error_Handler();
     }
@@ -190,7 +167,8 @@ void SystemClock_Config(void)
 /* USER CODE BEGIN 4 */
 int fputc(int ch, FILE *f)
 {
-    HAL_UART_Transmit(&huart1, (uint8_t *)&ch, 1, 0xffff);
+    while (!(CDC_Transmit_FS((uint8_t *)&ch, 1) == USBD_OK))
+        ;
     return ch;
 }
 
@@ -227,5 +205,3 @@ void assert_failed(uint8_t *file, uint32_t line)
     /* USER CODE END 6 */
 }
 #endif /* USE_FULL_ASSERT */
-
-/************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/
