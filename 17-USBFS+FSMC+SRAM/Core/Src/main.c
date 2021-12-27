@@ -20,6 +20,7 @@
 #include "main.h"
 #include "usb_device.h"
 #include "gpio.h"
+#include "fsmc.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
@@ -45,10 +46,14 @@
 /* USER CODE END PM */
 
 /* Private variables ---------------------------------------------------------*/
+
 /* USER CODE BEGIN PV */
-uint8_t Txbuffer[10000]; // 待发送数据
-uint8_t YYY[] = "Hello World!";
 volatile uint8_t MY_USB_OK;
+
+#define EXT_SRAM_ADDR ((uint32_t)0x68000000)
+#define EXT_SRAM_SIZE (1 * 1024 * 1024)
+
+uint32_t bsp_TestExtSRAM(void);
 
 /* USER CODE END PV */
 
@@ -92,23 +97,20 @@ int main(void)
     /* Initialize all configured peripherals */
     MX_GPIO_Init();
     MX_USB_DEVICE_Init();
+    MX_FSMC_Init();
     /* USER CODE BEGIN 2 */
     while (!MY_USB_OK)
         ;
     MY_USB_OK = 0;
-    printf("Hello World! Wei\r\n");
-    for (uint16_t i = 0; i < 10000; i++)
+    printf("STM32F407ZG FSMC SRAM Test By Mculover666\r\n");
+    if (bsp_TestExtSRAM() == 0)
     {
-        Txbuffer[i] = 0x62;
+        printf("SRAM Test success\r\n");
     }
-    MY_GET_TICK();
-    HAL_Delay(10);
-    CDC_Transmit_FS((uint8_t *)Txbuffer, 10000);
-    while (!MY_USB_OK)
-        ;
-    MY_USB_OK = 0;
-    MY_GET_TICK();
-
+    else
+    {
+        printf("SRAM Test fail\r\n");
+    }
     /* USER CODE END 2 */
 
     /* Infinite loop */
@@ -170,6 +172,99 @@ int fputc(int ch, FILE *f)
     while (!(CDC_Transmit_FS((uint8_t *)&ch, 1) == USBD_OK))
         ;
     return ch;
+}
+/*
+*********************************************************************************************************
+*	函 数 名: bsp_TestExtSRAM
+*	功能说明: 扫描测试外部SRAM的全部单元。
+*	形    参: 无
+*	返 回 值: 0 表示测试通过；
+*大于0表示错误单元的个数。
+*********************************************************************************************************
+*/
+uint32_t bsp_TestExtSRAM(void)
+{
+    uint32_t i;
+    uint32_t *pSRAM;
+    uint8_t *pBytes;
+    uint32_t err;
+    const uint8_t ByteBuf[4] = {0x55, 0xA5, 0x5A, 0xAA};
+
+    /* 写SRAM */
+    pSRAM = (uint32_t *)EXT_SRAM_ADDR;
+    for (i = 0; i < EXT_SRAM_SIZE / 4; i++)
+    {
+        *pSRAM++ = i;
+    }
+
+    /* 读SRAM */
+    err = 0;
+    pSRAM = (uint32_t *)EXT_SRAM_ADDR;
+    for (i = 0; i < EXT_SRAM_SIZE / 4; i++)
+    {
+        if (*pSRAM++ != i)
+        {
+            err++;
+        }
+    }
+    printf("SDRAM check round 1 error = %d\r\n", err);
+    if (err > 0)
+    {
+        return (4 * err);
+    }
+
+#if 1
+    /* 对SRAM 的数据求反并写入 */
+    pSRAM = (uint32_t *)EXT_SRAM_ADDR;
+    for (i = 0; i < EXT_SRAM_SIZE / 4; i++)
+    {
+        *pSRAM = ~*pSRAM;
+        pSRAM++;
+    }
+
+    /* 再次比较SRAM的数据 */
+    err = 0;
+    pSRAM = (uint32_t *)EXT_SRAM_ADDR;
+    for (i = 0; i < EXT_SRAM_SIZE / 4; i++)
+    {
+        if (*pSRAM++ != (~i))
+        {
+            err++;
+        }
+    }
+
+    printf("SDRAM check round 2 error = %d\r\n", err);
+    if (err > 0)
+    {
+        return (4 * err);
+    }
+#endif
+
+    /* 测试按字节方式访问, 目的是验证 FSMC_NBL0 、 FSMC_NBL1
+     * 口线
+     */
+    pBytes = (uint8_t *)EXT_SRAM_ADDR;
+    for (i = 0; i < sizeof(ByteBuf); i++)
+    {
+        *pBytes++ = ByteBuf[i];
+    }
+
+    /* 比较SRAM的数据 */
+    err = 0;
+    pBytes = (uint8_t *)EXT_SRAM_ADDR;
+    for (i = 0; i < sizeof(ByteBuf); i++)
+    {
+        if (*pBytes++ != ByteBuf[i])
+        {
+            err++;
+        }
+    }
+    printf("SDRAM check round 3 error = %d\r\n", err);
+    if (err > 0)
+    {
+        return err;
+    }
+    return 0;
 }
 
 /* USER CODE END 4 */

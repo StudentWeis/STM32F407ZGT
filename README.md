@@ -372,7 +372,17 @@ I2C 读取 MPU6050 数据
 
 ### 任务 17
 
-**简介**：FSMC 驱动外部 SRAM 读写数据。
+**简介**：FSMC 驱动外部 SRAM 读写数据，通过 USBFS 与电脑通信。
 
 **外设**：USBFS、FSMC
 
+所用 SRAM：
+
+**参考**：
+
+- https://blog.csdn.net/Mculover666/article/details/108355554
+
+- http://www.xingmem.com/download/datasheet/XM8A51216V33(8M).pdf
+- https://item.taobao.com/item.htm?spm=1195o.1.14.16.764c3e33CtSwEu&id=607390891971&ns=1
+
+一次成功。
